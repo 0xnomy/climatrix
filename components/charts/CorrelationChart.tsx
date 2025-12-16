@@ -18,7 +18,7 @@ export function CorrelationChart({ data }: CorrelationChartProps) {
             </CardHeader>
             <CardContent className="flex-1 min-h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                    <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                    <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 40 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                         <XAxis
                             type="number"
