@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CLIMATRIX
 
-## Getting Started
+Climatrix is a next-generation climate data visualization dashboard built with Next.js 16. It provides an interactive interface for exploring global climate trends, including temperature anomalies, CO2 concentrations, and sea level rise, using a comprehensive 2000-2022 dataset.
 
-First, run the development server:
+## Project Overview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+The application serves as a research-grade visualization platform designed to present complex climate data in an accessible, interactive format. It features a Bento Grid layout for simultaneous multi-metric monitoring, a geospatial heatmap for regional temperature analysis, and an integrated AI assistant for contextual data queries.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Key Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Interactive Dashboard
+- **Geospatial Visualization**: Interactive D3-based world map displaying annual temperature distributions by country.
+- **Dynamic Trend Analysis**: Multi-mode line charts allowing users to toggle between Temperature, CO2, and Sea Level metrics.
+- **Correlation Analysis**: Scatter plots visualizing the relationship between CO2 concentrations and global temperature anomalies.
+- **Regional Risk Assessment**: Ranked bar charts highlighting countries with the highest temperature volatility.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### AI Integration
+- **Context-Aware Chatbot**: Built-in AI assistant powered by Groq (Llama-3.3-70b).
+- **RAG Architecture**: The bot is grounded in a specific data audit report, ensuring responses are relevant to the provided dataset.
 
-## Learn More
+### Technical Architecture
+- **Responsive Layout**: Uses a 12-column Bento Grid system optimized for large displays with responsive fallback.
+- **Performance**: Static Generation (SSG) for core dashboard views with client-side interactivity for charts.
+- **Styling**: Utility-first CSS using Tailwind with a custom dark-mode design system.
 
-To learn more about Next.js, take a look at the following resources:
+## Technology Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Visualization**: Recharts, D3.js
+- **AI/Inference**: Groq SDK (Llama-3.3-70b)
+- **Data Processing**: Python (Pandas/Matplotlib for EDA), Node.js scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Installation & Setup
 
-## Deploy on Vercel
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/0xnomy/climatrix.git
+   cd climatrix
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. **Configure Environment**
+   Create a `.env` file in the root directory and add your Groq API key:
+   ```bash
+   GROQ_API_KEY=your_api_key_here
+   ```
+
+4. **Run Development Server**
+   ```bash
+   npm run dev
+   ```
+
+5. **Build for Production**
+   ```bash
+   npm run build
+   npm start
+   ```
+
+## Project Structure
+
+- `/app`: Next.js App Router pages and API routes.
+- `/components`: UI components, including Charts (`/charts`) and the Chat Assistant.
+- `/public/data`: JSON datasets and GeoJSON files.
+- `/scripts`: Data processing and analysis scripts.
+- `/docs`: Documentation and EDA audit reports.
