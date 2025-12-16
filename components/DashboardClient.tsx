@@ -13,7 +13,8 @@ import { InsightsPanel } from './InsightsPanel';
 import { cn } from '@/lib/utils';
 
 export function DashboardClient() {
-    const [currentYear, setCurrentYear] = useState(2023);
+    // Audit found data ends in 2022. Initialize to 2022.
+    const [currentYear, setCurrentYear] = useState(2022);
     const [isPlaying, setIsPlaying] = useState(false);
     const [activeMetric, setActiveMetric] = useState<'temp' | 'co2' | 'sea'>('temp');
 
@@ -22,7 +23,7 @@ export function DashboardClient() {
         let interval: NodeJS.Timeout;
         if (isPlaying) {
             interval = setInterval(() => {
-                setCurrentYear(prev => prev < 2023 ? prev + 1 : 2000);
+                setCurrentYear(prev => prev < 2022 ? prev + 1 : 2000);
             }, 500);
         }
         return () => clearInterval(interval);
@@ -30,10 +31,13 @@ export function DashboardClient() {
 
     // Dashboard logic
     const togglePlay = () => setIsPlaying(!isPlaying);
-    const reset = () => { setIsPlaying(false); setCurrentYear(2023); };
+    const reset = () => { setIsPlaying(false); setCurrentYear(2022); };
+
+    // Metric Safe Accessor
+    const currentMetrics: any = globalTrends.find((d: any) => d.year === currentYear) || {};
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 pb-12"> {/* Added pb-12 to prevent bottom overlap */}
 
             {/* 1. Time Control Bar & Summary Metrics Header */}
             <div className="sticky top-16 z-30 bg-black/90 backdrop-blur-xl pb-3 pt-2 border-b border-white/10 shadow-lg">
@@ -53,37 +57,41 @@ export function DashboardClient() {
                             <input
                                 type="range"
                                 min="2000"
-                                max="2023"
+                                max="2022"
                                 value={currentYear}
                                 onChange={(e) => { setIsPlaying(false); setCurrentYear(parseInt(e.target.value)); }}
                                 className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400"
                             />
                         </div>
 
-                        <button onClick={reset} className="p-1.5 text-gray-400 hover:text-white transition-colors" title="Reset to 2023">
+                        <button onClick={reset} className="p-1.5 text-gray-400 hover:text-white transition-colors" title="Reset to 2022">
                             <RotateCcw className="h-4 w-4" />
                         </button>
                     </div>
 
                     {/* Summary Metrics Row */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full xl:w-auto flex-1">
-                        <StatCard icon={<Thermometer className="h-4 w-4 text-orange-400" />} label="Avg Temp" value={`${globalTrends.find((d: any) => d.year === currentYear)?.temp.toFixed(2)}°C`} />
-                        <StatCard icon={<Activity className="h-4 w-4 text-green-400" />} label="CO₂" value={`${globalTrends.find((d: any) => d.year === currentYear)?.co2.toFixed(1)} ppm`} />
-                        <StatCard icon={<Waves className="h-4 w-4 text-blue-400" />} label="Sea Level" value={`${globalTrends.find((d: any) => d.year === currentYear)?.sea.toFixed(1)} mm`} />
-                        <StatCard icon={<Waves className="h-4 w-4 text-cyan-400" />} label="Precip" value={`${globalTrends.find((d: any) => d.year === currentYear)?.precip.toFixed(1)} mm`} />
+                        <StatCard icon={<Thermometer className="h-4 w-4 text-orange-400" />} label="Avg Temp" value={`${currentMetrics.temp?.toFixed(2) ?? 'N/A'}°C`} />
+                        <StatCard icon={<Activity className="h-4 w-4 text-green-400" />} label="CO₂" value={`${currentMetrics.co2?.toFixed(1) ?? 'N/A'} ppm`} />
+                        <StatCard icon={<Waves className="h-4 w-4 text-blue-400" />} label="Sea Level" value={`${currentMetrics.sea?.toFixed(1) ?? 'N/A'} mm`} />
+                        <StatCard icon={<Waves className="h-4 w-4 text-cyan-400" />} label="Precip" value={`${currentMetrics.precip?.toFixed(1) ?? 'N/A'} mm`} />
                     </div>
                 </div>
             </div>
 
             {/* 2. BENTO GRID LAYOUT */}
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
+            {/* auto-rows-min ensures rows don't collapse dangerously */}
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 auto-rows-max">
 
                 {/* Row 1: Map (8 cols) + Trend Chart (4 cols) */}
-                <div className="xl:col-span-8 h-[420px]">
-                    <WorldMap countryData={countryTrends} year={currentYear} />
+                {/* Set explicit max-height to avoid 'taking too much space' */}
+                <div className="xl:col-span-8 h-[450px] overflow-hidden rounded-xl border border-white/10 bg-black/40 relative">
+                    <div className="absolute inset-0">
+                        <WorldMap countryData={countryTrends} year={currentYear} />
+                    </div>
                 </div>
 
-                <div className="xl:col-span-4 h-[420px] flex flex-col gap-4">
+                <div className="xl:col-span-4 h-[450px] flex flex-col gap-4">
                     {/* Filter Tabs for Chart */}
                     <div className="grid grid-cols-3 gap-1 bg-white/5 p-1 rounded-lg border border-white/10 shrink-0">
                         <FilterBtn label="Temp" active={activeMetric === 'temp'} onClick={() => setActiveMetric('temp')} />
@@ -96,14 +104,14 @@ export function DashboardClient() {
                     </div>
                 </div>
 
-                {/* Row 2: Secondary Analysis (All Equal Height 350px) */}
+                {/* Row 2: Secondary Analysis */}
                 <div className="xl:col-span-4 h-[350px]">
                     <CorrelationChart data={globalTrends} />
                 </div>
                 <div className="xl:col-span-4 h-[350px]">
                     <RegionalRisksChart countryData={countryTrends} />
                 </div>
-                <div className="xl:col-span-4 h-[350px]">
+                <div className="xl:col-span-4 h-[350px] flex flex-col">
                     <InsightsPanel />
                 </div>
 

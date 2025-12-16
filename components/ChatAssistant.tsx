@@ -146,12 +146,19 @@ export function ChatAssistant() {
 
             {/* Toggle Button */}
             {!isOpen && (
-                <button
-                    onClick={() => setIsOpen(true)}
-                    className="h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-500 shadow-xl flex items-center justify-center text-white transition-all hover:scale-105 active:scale-95 animate-in zoom-in duration-300"
-                >
-                    <MessageCircle className="h-7 w-7" />
-                </button>
+                <div className="relative group">
+                    <div className="absolute -top-12 right-0 bg-white text-black text-xs font-bold py-1 px-3 rounded-xl shadow-lg animate-bounce pointer-events-none whitespace-nowrap">
+                        Ask me anything!
+                        <div className="absolute bottom-[-6px] right-6 w-3 h-3 bg-white rotate-45"></div>
+                    </div>
+                    <button
+                        onClick={() => setIsOpen(true)}
+                        className="h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-500 shadow-xl flex items-center justify-center text-white transition-all hover:scale-105 active:scale-95 animate-in zoom-in duration-300 relative"
+                    >
+                        <MessageCircle className="h-7 w-7" />
+                        <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full border-2 border-black animate-pulse"></span>
+                    </button>
+                </div>
             )}
         </div>
     );
