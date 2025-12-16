@@ -3,12 +3,13 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY,
-});
 
 export async function POST(req: Request) {
     try {
+        const groq = new Groq({
+            apiKey: process.env.GROQ_API_KEY || '',
+        });
+
         const { message, history } = await req.json();
 
         // Load Context from info.txt
