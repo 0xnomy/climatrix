@@ -32,7 +32,7 @@ export function RegionalRisksChart({ countryData }: RegionalRisksChartProps) {
             </CardHeader>
             <CardContent className="flex-1 min-h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={volatilityData} margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+                    <BarChart layout="vertical" data={volatilityData} margin={{ top: 5, right: 30, left: 20, bottom: 20 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#333" horizontal={true} vertical={false} />
                         <XAxis type="number" stroke="#9ca3af" tickLine={false} axisLine={false} unit="°C" />
                         <YAxis type="category" dataKey="country" stroke="#9ca3af" tickLine={false} axisLine={false} width={100} />
