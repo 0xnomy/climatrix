@@ -59,7 +59,6 @@ Norfolk Island: 16.3419
 Trinidad and Tobago: 16.3325
 Turkmenistan: 16.2872
 
-
 # Raw Data Sample
 
 Year | Temp | CO2 | Sea Level | Precip | Humidity | Wind | Temp_change_yoy | CO2_change_yoy

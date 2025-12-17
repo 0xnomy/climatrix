@@ -80,18 +80,19 @@ export function DashboardClient() {
             </div>
 
             {/* 2. BENTO GRID LAYOUT */}
-            {/* auto-rows-min ensures rows don't collapse dangerously */}
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 auto-rows-max">
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
 
-                {/* Row 1: Map (8 cols) + Trend Chart (4 cols) */}
-                {/* Set explicit max-height to avoid 'taking too much space' */}
-                <div className="xl:col-span-8 h-[450px] overflow-hidden rounded-xl border border-white/10 bg-black/40 relative">
-                    <div className="absolute inset-0">
-                        <WorldMap countryData={countryTrends} year={currentYear} />
+                {/* Row 1: Map (6 cols) + Trend Chart (6 cols) */}
+                {/* Enforce equal height for the entire row */}
+                <div className="xl:col-span-6 h-[500px]">
+                    <div className="h-full overflow-hidden rounded-xl border border-white/10 bg-black/40 relative">
+                        <div className="absolute inset-0">
+                            <WorldMap countryData={countryTrends} year={currentYear} />
+                        </div>
                     </div>
                 </div>
 
-                <div className="xl:col-span-4 h-[450px] flex flex-col gap-4">
+                <div className="xl:col-span-6 h-[500px] flex flex-col gap-4">
                     {/* Filter Tabs for Chart */}
                     <div className="grid grid-cols-3 gap-1 bg-white/5 p-1 rounded-lg border border-white/10 shrink-0">
                         <FilterBtn label="Temp" active={activeMetric === 'temp'} onClick={() => setActiveMetric('temp')} />
@@ -105,13 +106,14 @@ export function DashboardClient() {
                 </div>
 
                 {/* Row 2: Secondary Analysis */}
-                <div className="xl:col-span-4 h-[350px]">
+                {/* Enforce equal height for the entire row */}
+                <div className="xl:col-span-4 h-[400px]">
                     <CorrelationChart data={globalTrends} />
                 </div>
-                <div className="xl:col-span-4 h-[350px]">
+                <div className="xl:col-span-4 h-[400px]">
                     <RegionalRisksChart countryData={countryTrends} />
                 </div>
-                <div className="xl:col-span-4 h-[350px] flex flex-col">
+                <div className="xl:col-span-4 h-[400px]">
                     <InsightsPanel />
                 </div>
 

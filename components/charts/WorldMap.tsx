@@ -14,6 +14,22 @@ export function WorldMap({ countryData, year }: WorldMapProps) {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [geoData, setGeoData] = useState<any>(null);
     const [tooltip, setTooltip] = useState<{ x: number, y: number, content: string | null }>({ x: 0, y: 0, content: null });
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+    useEffect(() => {
+        const resizeObserver = new ResizeObserver((entries) => {
+            if (entries[0]) {
+                const { width, height } = entries[0].contentRect;
+                setDimensions({ width, height });
+            }
+        });
+
+        if (wrapperRef.current) {
+            resizeObserver.observe(wrapperRef.current);
+        }
+
+        return () => resizeObserver.disconnect();
+    }, []);
 
     useEffect(() => {
         fetch('/data/world.geojson')
@@ -22,28 +38,37 @@ export function WorldMap({ countryData, year }: WorldMapProps) {
     }, []);
 
     useEffect(() => {
-        if (!geoData || !svgRef.current || !wrapperRef.current) return;
+        if (!geoData || !svgRef.current || !wrapperRef.current || dimensions.width === 0 || dimensions.height === 0) return;
 
         const svg = d3.select(svgRef.current);
         svg.selectAll("*").remove();
 
-        const { width, height } = wrapperRef.current.getBoundingClientRect();
+        const { width, height } = dimensions;
 
-        // Responsive projection
+        // Responsive projection using fitSize to maximize filling the container
         const projection = d3.geoMercator()
-            .scale(width / 6.5)
-            .center([0, 20])
-            .translate([width / 2, height / 2]);
+            .fitSize([width, height], geoData);
 
         const path = d3.geoPath().projection(projection);
+
+        // Add zoom behavior
+        const zoom = d3.zoom<SVGSVGElement, unknown>()
+            .scaleExtent([1, 8])
+            .on('zoom', (event) => {
+                g.attr('transform', event.transform);
+            });
+
+        svg.call(zoom);
+
+        // Create a group for the map paths
+        const g = svg.append("g");
 
         // Color Scale - Domain based on typical temperature range
         const colorScale = d3.scaleSequential(d3.interpolateSpectral)
             .domain([30, -10]); // Inverted for Spectral (Red = Hot)
 
         // Draw Map
-        svg.append("g")
-            .selectAll("path")
+        g.selectAll("path")
             .data(geoData.features)
             .join("path")
             .attr("d", path as any)
@@ -82,16 +107,17 @@ export function WorldMap({ countryData, year }: WorldMapProps) {
                 setTooltip({ x: 0, y: 0, content: null });
             });
 
-    }, [geoData, countryData, year]);
+
+    }, [geoData, countryData, year, dimensions]);
 
     return (
-        <Card className="bg-white/5 border-white/10 text-white mt-6 shadow-xl relative overflow-hidden">
+        <Card className="bg-white/5 border-white/10 text-white shadow-xl relative overflow-hidden h-full flex flex-col">
             <CardHeader>
                 <CardTitle>Geospatial Temperature Distribution</CardTitle>
                 <CardDescription>Average annual temperature by country for {year}</CardDescription>
             </CardHeader>
-            <CardContent className="p-0">
-                <div ref={wrapperRef} className="w-full h-[500px] relative bg-[#0a0a0a]">
+            <CardContent className="p-0 flex-1 min-h-0">
+                <div ref={wrapperRef} className="w-full h-full relative bg-[#0a0a0a]">
                     <svg ref={svgRef} width="100%" height="100%" className="block" />
 
                     {/* Custom Tooltip Portal */}

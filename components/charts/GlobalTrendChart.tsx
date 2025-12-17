@@ -64,8 +64,8 @@ export function GlobalTrendChart({ data, metric }: GlobalTrendChartProps) {
                         : `Global annual average measurements.`}
                 </CardDescription>
             </CardHeader>
-            <CardContent className="flex-1 min-h-[0]">
-                <div className="h-full w-full min-h-[250px]">
+            <CardContent className="flex-1 min-h-0 p-0">
+                <div className="h-full w-full">
                     <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart data={processedData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
