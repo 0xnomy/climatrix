@@ -3,47 +3,95 @@
 import { useState, useEffect } from 'react';
 import { GlobalTrendChart } from './charts/GlobalTrendChart';
 import { CorrelationChart } from './charts/CorrelationChart';
+import { AccelerationHeatmap } from './charts/AccelerationHeatmap';
 import { RegionalRisksChart } from './charts/RegionalRisksChart';
+import { AnalyticsProvider, useAnalytics } from '@/app/context/AnalyticsContext';
 import globalTrends from '@/public/data/global_trends.json';
 import { Card, CardContent } from './ui/card';
-import { Play, Pause, RotateCcw, Activity, Thermometer, Waves } from 'lucide-react';
+import { Play, Pause, RotateCcw, Activity, Thermometer, Waves, ChevronLeft } from 'lucide-react';
 import { WorldMap } from './charts/WorldMap';
 import countryTrends from '@/public/data/country_trends.json';
 import { InsightsPanel } from './InsightsPanel';
 import { cn } from '@/lib/utils';
 
 export function DashboardClient() {
-    // Audit found data ends in 2022. Initialize to 2022.
-    const [currentYear, setCurrentYear] = useState(2022);
+    return (
+        <AnalyticsProvider>
+            <DashboardContent />
+        </AnalyticsProvider>
+    );
+}
+
+function DashboardContent() {
+    const {
+        selectedRegion,
+        setRegion,
+        timeRange,
+        setTimeRange,
+        resetFilters,
+        viewMode
+    } = useAnalytics();
+
+    // Local animation state
     const [isPlaying, setIsPlaying] = useState(false);
-    const [activeMetric, setActiveMetric] = useState<'temp' | 'co2' | 'sea'>('temp');
+    const [activeMetrics, setActiveMetrics] = useState<'temp' | 'co2' | 'sea'>('temp');
+
+    // Sync current year with timeRange[1] for animation compatibility
+    const currentYear = timeRange[1];
 
     // Animation Loop
     useEffect(() => {
         let interval: NodeJS.Timeout;
         if (isPlaying) {
             interval = setInterval(() => {
-                setCurrentYear(prev => prev < 2022 ? prev + 1 : 2000);
+                setTimeRange([timeRange[0], currentYear < 2022 ? currentYear + 1 : 2000]);
             }, 500);
         }
         return () => clearInterval(interval);
-    }, [isPlaying]);
+    }, [isPlaying, currentYear, timeRange, setTimeRange]);
 
-    // Dashboard logic
+    // Derived Metrics Logic
+    // If selectedRegion is present, try to find that specific data.
+    // Fallback to global if not found or no region selected.
+    let displayMetrics: any = {};
+    const safeYear = Math.min(Math.max(currentYear, 2000), 2022);
+
+    if (selectedRegion && (countryTrends as any)[selectedRegion]) {
+        // Find country specific year data
+        const cData = (countryTrends as any)[selectedRegion].find((d: any) => d.year === safeYear);
+        displayMetrics = cData || {};
+    } else {
+        displayMetrics = globalTrends.find((d: any) => d.year === safeYear) || {};
+    }
+
     const togglePlay = () => setIsPlaying(!isPlaying);
-    const reset = () => { setIsPlaying(false); setCurrentYear(2022); };
-
-    // Metric Safe Accessor
-    const currentMetrics: any = globalTrends.find((d: any) => d.year === currentYear) || {};
+    const handleReset = () => { setIsPlaying(false); resetFilters(); };
 
     return (
-        <div className="space-y-4 pb-12"> {/* Added pb-12 to prevent bottom overlap */}
+        <div className="space-y-4 pb-12">
 
-            {/* 1. Time Control Bar & Summary Metrics Header */}
+            {/* 1. Header & Controls */}
             <div className="sticky top-16 z-30 bg-black/90 backdrop-blur-xl pb-3 pt-2 border-b border-white/10 shadow-lg">
                 <div className="flex flex-col xl:flex-row gap-4 items-center justify-between">
 
-                    {/* Controls */}
+                    {/* View Title & Back Button */}
+                    <div className="flex items-center gap-3 w-full xl:w-auto">
+                        {viewMode === 'country-detail' && (
+                            <button onClick={() => setRegion(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                                <ChevronLeft className="h-5 w-5 text-white" />
+                            </button>
+                        )}
+                        <div>
+                            <h2 className="text-lg font-bold text-white leading-tight">
+                                {selectedRegion ? selectedRegion : 'Global Overview'}
+                            </h2>
+                            <p className="text-xs text-slate-400">
+                                {selectedRegion ? 'Regional Climate Analysis' : 'Planetary Aggregate Metrics'}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Timeline Controls */}
                     <div className="flex items-center gap-4 w-full xl:w-auto bg-white/5 p-2 px-4 rounded-full border border-white/10">
                         <button
                             onClick={togglePlay}
@@ -59,62 +107,93 @@ export function DashboardClient() {
                                 min="2000"
                                 max="2022"
                                 value={currentYear}
-                                onChange={(e) => { setIsPlaying(false); setCurrentYear(parseInt(e.target.value)); }}
+                                onChange={(e) => {
+                                    setIsPlaying(false);
+                                    setTimeRange([2000, parseInt(e.target.value)]);
+                                }}
                                 className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400"
                             />
                         </div>
 
-                        <button onClick={reset} className="p-1.5 text-gray-400 hover:text-white transition-colors" title="Reset to 2022">
+                        <button onClick={handleReset} className="p-1.5 text-gray-400 hover:text-white transition-colors" title="Reset Dashboard">
                             <RotateCcw className="h-4 w-4" />
                         </button>
                     </div>
 
-                    {/* Summary Metrics Row */}
+                    {/* Live Metrics */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full xl:w-auto flex-1">
-                        <StatCard icon={<Thermometer className="h-4 w-4 text-orange-400" />} label="Avg Temp" value={`${currentMetrics.temp?.toFixed(2) ?? 'N/A'}°C`} />
-                        <StatCard icon={<Activity className="h-4 w-4 text-green-400" />} label="CO₂" value={`${currentMetrics.co2?.toFixed(1) ?? 'N/A'} ppm`} />
-                        <StatCard icon={<Waves className="h-4 w-4 text-blue-400" />} label="Sea Level" value={`${currentMetrics.sea?.toFixed(1) ?? 'N/A'} mm`} />
-                        <StatCard icon={<Waves className="h-4 w-4 text-cyan-400" />} label="Precip" value={`${currentMetrics.precip?.toFixed(1) ?? 'N/A'} mm`} />
+                        <StatCard
+                            icon={<Thermometer className="h-4 w-4 text-orange-400" />}
+                            label={selectedRegion ? "Regional Temp" : "Avg Temp"}
+                            value={`${displayMetrics.temp?.toFixed(2) ?? 'N/A'}°C`}
+                        />
+                        <StatCard
+                            icon={<Activity className="h-4 w-4 text-green-400" />}
+                            label="CO₂"
+                            value={`${displayMetrics.co2?.toFixed(1) ?? 'N/A'} ppm`}
+                        />
+                        <StatCard
+                            icon={<Waves className="h-4 w-4 text-blue-400" />}
+                            label="Sea Level"
+                            value={`${displayMetrics.sea?.toFixed(1) ?? 'N/A'} mm`}
+                        />
+                        <StatCard
+                            icon={<Waves className="h-4 w-4 text-cyan-400" />}
+                            label="Precip"
+                            value={`${displayMetrics.precip?.toFixed(1) ?? 'N/A'} mm`}
+                        />
                     </div>
                 </div>
             </div>
 
-            {/* 2. BENTO GRID LAYOUT */}
+            {/* 2. BENTO LAYOUT */}
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
 
-                {/* Row 1: Map (6 cols) + Trend Chart (6 cols) */}
-                {/* Enforce equal height for the entire row */}
+                {/* Map Panel */}
                 <div className="xl:col-span-6 h-[500px]">
                     <div className="h-full overflow-hidden rounded-xl border border-white/10 bg-black/40 relative">
                         <div className="absolute inset-0">
-                            <WorldMap countryData={countryTrends} year={currentYear} />
+                            {/* Pass setRegion to map so clicking enables drill-down */}
+                            <WorldMap
+                                countryData={countryTrends}
+                                year={currentYear}
+                                onCountryClick={(name) => setRegion(name)}
+                                activeRegion={selectedRegion}
+                            />
                         </div>
                     </div>
                 </div>
 
+                {/* Main Trend Chart */}
                 <div className="xl:col-span-6 h-[500px] flex flex-col gap-4">
-                    {/* Filter Tabs for Chart */}
                     <div className="grid grid-cols-3 gap-1 bg-white/5 p-1 rounded-lg border border-white/10 shrink-0">
-                        <FilterBtn label="Temp" active={activeMetric === 'temp'} onClick={() => setActiveMetric('temp')} />
-                        <FilterBtn label="CO₂" active={activeMetric === 'co2'} onClick={() => setActiveMetric('co2')} />
-                        <FilterBtn label="Sea Lvl" active={activeMetric === 'sea'} onClick={() => setActiveMetric('sea')} />
+                        <FilterBtn label="Temp" active={activeMetrics === 'temp'} onClick={() => setActiveMetrics('temp')} />
+                        <FilterBtn label="CO₂" active={activeMetrics === 'co2'} onClick={() => setActiveMetrics('co2')} />
+                        <FilterBtn label="Sea Lvl" active={activeMetrics === 'sea'} onClick={() => setActiveMetrics('sea')} />
                     </div>
 
                     <div className="flex-1 min-h-0">
-                        <GlobalTrendChart data={globalTrends} metric={activeMetric} />
+                        <GlobalTrendChart
+                            data={globalTrends}
+                            metric={activeMetrics}
+                            selectedRegion={selectedRegion}
+                            countryData={countryTrends}
+                        />
                     </div>
                 </div>
 
-                {/* Row 2: Secondary Analysis */}
-                {/* Enforce equal height for the entire row */}
+                {/* Secondary Rows: Flat Grid for uniformity */}
                 <div className="xl:col-span-4 h-[400px]">
-                    <CorrelationChart data={globalTrends} />
+                    <CorrelationChart
+                        data={globalTrends}
+                        currentYear={currentYear}
+                    />
+                </div>
+                <div className="xl:col-span-4 h-[400px]">
+                    <AccelerationHeatmap countryData={countryTrends} />
                 </div>
                 <div className="xl:col-span-4 h-[400px]">
                     <RegionalRisksChart countryData={countryTrends} />
-                </div>
-                <div className="xl:col-span-4 h-[400px]">
-                    <InsightsPanel />
                 </div>
 
             </div>
@@ -122,6 +201,7 @@ export function DashboardClient() {
     );
 }
 
+// ... existing helper components ...
 function StatCard({ label, value, icon }: { label: string, value: string, icon: React.ReactNode }) {
     return (
         <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors">

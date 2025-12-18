@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { BarChart3, Globe, Home, Menu, X } from 'lucide-react';
+import { BarChart3, Globe, Home, Menu, X, LineChart } from 'lucide-react';
 import { useState } from 'react';
 
 const navItems = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
+    { name: 'Raw EDA', href: '/eda', icon: LineChart },
 ];
 
 export function Navbar() {
@@ -43,6 +44,7 @@ export function Navbar() {
                                 {item.name}
                             </Link>
                         ))}
+
                         <a
                             href="https://github.com/0xnomy/climatrix"
                             target="_blank"

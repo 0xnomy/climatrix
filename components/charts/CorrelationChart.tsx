@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 
 interface CorrelationChartProps {
     data: any[];
+    currentYear?: number;
 }
 
-export function CorrelationChart({ data }: CorrelationChartProps) {
+export function CorrelationChart({ data, currentYear }: CorrelationChartProps) {
     return (
         <Card className="bg-white/5 border-white/10 text-white shadow-xl h-full flex flex-col">
             <CardHeader>
@@ -55,10 +56,15 @@ export function CorrelationChart({ data }: CorrelationChartProps) {
                                     return [value, name];
                                 }}
                             />
-                            <Scatter name="Climate Data" data={data} fill="#8884d8" r={2.5}>
-                                {data.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.year === 2023 ? '#ef4444' : '#3b82f6'} />
-                                ))}
+                            <Scatter name="Climate Data" data={data} fill="#8884d8">
+                                {data.map((entry, index) => {
+                                    const isCurrent = entry.year === currentYear;
+                                    const opacity = currentYear ? (isCurrent ? 1 : 0.3) : 1;
+                                    const fill = isCurrent ? '#ef4444' : '#3b82f6';
+                                    const radius = isCurrent ? 6 : 3;
+
+                                    return <Cell key={`cell-${index}`} fill={fill} fillOpacity={opacity} />;
+                                })}
                             </Scatter>
                         </ScatterChart>
                     </ResponsiveContainer>

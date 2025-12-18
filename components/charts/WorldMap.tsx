@@ -7,9 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 interface WorldMapProps {
     countryData: any;
     year: number;
+    onCountryClick?: (name: string) => void;
+    activeRegion?: string | null;
 }
 
-export function WorldMap({ countryData, year }: WorldMapProps) {
+export function WorldMap({ countryData, year, onCountryClick, activeRegion }: WorldMapProps) {
     const svgRef = useRef<SVGSVGElement>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [geoData, setGeoData] = useState<any>(null);
@@ -80,6 +82,11 @@ export function WorldMap({ countryData, year }: WorldMapProps) {
             .attr("stroke", "#18181b")
             .attr("stroke-width", 0.5)
             .style("cursor", "pointer")
+            .on("click", (event, d: any) => {
+                if (onCountryClick) {
+                    onCountryClick(d.properties.name);
+                }
+            })
             .on("mousemove", function (event, d: any) {
                 const countryName = d.properties.name;
                 const record = countryData[countryName]?.find((r: any) => r.year === year);
